@@ -93,8 +93,11 @@ let turn = 1;               // 현재 턴
 let isPlayerTurn = true;    // 플레이어 턴 여부
 /** @type {boolean} 게임 오버 상태인지 여부 */
 let isGameOver = false;     // 게임 오버 여부
-/** @type {boolean} 5층마다 상점이 자동으로 열렸는지 여부 (상점 닫을 때 다음 층 자동 진행을 위함) */
 let isShopAutoOpened = false; // 5층마다 상점이 자동으로 열렸는지 여부
+/** @type {boolean} 방치형 자동 전투 활성화 상태 토글을 위한 변수 */
+let isAutoBattle = true;
+/** @type {number|null} 스코어보_드 자동 갱신을 위한 인터벌 ID */
+let scoreboardRefreshInterval = null;
 
 /** @type {number} 스탯 분배 모달에서 임시로 사용할 스탯 포인트 */
 let tempStatPoints = 0;
@@ -113,6 +116,44 @@ function triggerBlackFlash() {
     overlay.style.animation = 'none';
     overlay.offsetHeight; // 애니메이션 재시작을 위한 리플로우 강제
     overlay.style.animation = 'black-flash-animation 0.25s ease-out';
+}
+
+/**
+ * 방치형 AI: 플레이어의 턴을 자동으로 진행합니다.
+ */
+function autoPlayPlayerTurn() {
+    if (isGameOver || !isPlayerTurn || !isAutoBattle) return;
+
+    findNextTarget();
+
+    const targetMonster = monsters[player.targetIndex];
+    if (!targetMonster || targetMonster.hp <= 0) return;
+
+    const aliveMonsters = monsters.filter(m => m.hp > 0).length;
+    const isBoss = (floor % 10 === 0);
+
+    if (player.hp < player.maxHp * 0.4) {
+        const healPotionIndex = player.inventory.findIndex(item => item.type === 'heal');
+        if (healPotionIndex !== -1) {
+            useInventoryItem(healPotionIndex);
+            setTimeout(autoPlayPlayerTurn, 500);
+            return;
+        }
+    }
+
+    const sweepMpCost = Math.floor(25 * player.mpCostMultiplier);
+    if (aliveMonsters >= 2 && player.mp >= sweepMpCost) {
+        executeSweepAttack();
+        return;
+    }
+
+    const powerMpCost = Math.floor(15 * player.mpCostMultiplier);
+    if ((isBoss || aliveMonsters === 1) && player.mp >= powerMpCost) {
+        executePowerAttack();
+        return;
+    }
+
+    executeNormalAttack();
 }
 
 /**
@@ -330,7 +371,7 @@ function monstersAttack() {
                 const pEmoji = document.getElementById('player-emoji');
                 pEmoji.classList.add('hit');
                 setTimeout(() => pEmoji.classList.remove('hit'), 300);
-                
+
                 updateUI();
                 if (i === livingMonsters.length - 1) {
                     endMonstersTurn();
@@ -377,7 +418,7 @@ function monstersAttack() {
                         case 'charge_attack':
                             monster.isCharging = true;
                             log(`⚡ ${monster.name}이(가) 강력한 힘을 모으기 시작합니다! (${skill.name})`, 'log-monster');
-                            if(monsterElement) showFloatingText('Charging...', monsterElement, 'buff');
+                            if (monsterElement) showFloatingText('Charging...', monsterElement, 'buff');
                             // 공격하지 않고 충전만 함
                             break;
                         case 'stun': {
@@ -388,7 +429,7 @@ function monstersAttack() {
                                 if (!defenseBuffUsedThisTurn) { log(`🛡️ 방어 성공! 받는 피해가 감소했습니다.`, 'log-system'); defenseBuffUsedThisTurn = true; }
                             }
                             player.hp -= dmg;
-                            playSound('hit');                            
+                            playSound('hit');
                             const skillName = skill.name || '강타';
                             showFloatingText(dmg, playerElement, 'crit');
 
@@ -417,7 +458,7 @@ function monstersAttack() {
                             const skillName = skill.name || '생명력 흡수';
                             log(`🩸 ${monster.name}의 ${skillName}! ${dmg}의 피해를 입고 자신의 체력을 ${healedAmount}만큼 회복합니다.`, 'log-monster');
                             showFloatingText(dmg, playerElement, 'damage');
-                            if(monsterElement) showFloatingText(`+${healedAmount}`, monsterElement, 'heal');
+                            if (monsterElement) showFloatingText(`+${healedAmount}`, monsterElement, 'heal');
                             break;
                         }
                         case 'mp_drain': {
@@ -506,6 +547,11 @@ function endMonstersTurn() {
         isPlayerTurn = true;
         toggleControls(true); // 플레이어 턴으로 전환하고 컨트롤 버튼 활성화
         updateUI();
+
+        // 방치형 자동 턴 계속 진행
+        if (!isGameOver && isAutoBattle) {
+            setTimeout(autoPlayPlayerTurn, 800);
+        }
     }
 }
 
@@ -747,7 +793,7 @@ function executeSweepAttack() {
 
             const monsterIndexInAll = monsters.findIndex(m => m === monster);
             const targetElement = monsterElements[monsterIndexInAll];
-            
+
             // 치명타 여부에 따라 데미지 및 효과 적용
             if (isCrit) {
                 dmg = Math.floor((baseDmg * 0.8) * player.critDamage + player.magicDamageBonus);
@@ -755,7 +801,7 @@ function executeSweepAttack() {
             } else {
                 showFloatingText(dmg, targetElement, 'damage');
             }
-            
+
             monster.hp -= dmg;
 
             // 몬스터 피격 애니메이션
@@ -830,7 +876,7 @@ function useInventoryItem(index) {
     const playerElement = document.getElementById('player-character');
     const emojiElement = document.getElementById('player-emoji');
     let flashColor = '';
-    
+
     // 아이템 타입에 따라 다른 효과 적용
     if (item.type === 'buff') {
         playSound('heal'); // 버프 물약도 동일한 사운드 사용
@@ -878,15 +924,18 @@ function useInventoryItem(index) {
 
     // 사용한 아이템을 인벤토리에서 제거
     player.inventory.splice(index, 1);
-    
+
     updateUI();
 
-    // 아이템 사용 후 모달을 다시 렌더링합니다.
-    const remainingPotions = player.inventory.filter(i => i.type === 'heal' || i.type === 'mpPotion' || i.type === 'buff' || i.type === 'critBuff');
-    if (remainingPotions.length === 0) {
-        closeItemSelect(); // 물약이 하나도 없으면 모달을 닫습니다.
-    } else {
-        showAllPotions(); // 목록을 새로고침합니다.
+    // 아이템 사용 후 모달이 열려있다면 다시 렌더링합니다. (자동 사용 시 모달 띄움 방지)
+    const modal = document.getElementById('item-select-modal');
+    if (modal && modal.style.display === 'flex') {
+        const remainingPotions = player.inventory.filter(i => i.type === 'heal' || i.type === 'mpPotion' || i.type === 'buff' || i.type === 'critBuff');
+        if (remainingPotions.length === 0) {
+            closeItemSelect(); // 물약이 하나도 없으면 모달을 닫습니다.
+        } else {
+            showAllPotions(); // 목록을 새로고침합니다.
+        }
     }
 }
 
@@ -988,7 +1037,7 @@ function winBattle() {
     const totalCoins = Math.floor(monsters.reduce((sum, m) => sum + m.dropCoins, 0) * player.goldBonus);
     player.coins += totalCoins;
     log(`전투 승리! ${totalCoins} 골드를 획득했습니다.`, 'log-system');
-    
+
     // --- 보스 특별 전리품 처리 ---
     monsters.forEach(monster => {
         if (monster.specialDrop && Math.random() < 0.85) { // 85% 확률로 드랍
@@ -1009,11 +1058,7 @@ function winBattle() {
  * 전투 승리 후 다음 단계(상점 또는 다음 층)로 진행하는 함수.
  */
 function proceedToNextStage() {
-    if (floor % 5 === 0) {
-        openShop(true);
-    } else {
-        nextFloor();
-    }
+    nextFloor(); // 방치형이므로 무조건 다음 층으로 넘어감
 }
 
 /**
@@ -1026,7 +1071,7 @@ function nextFloor() {
     turn = 1;
     isPlayerTurn = true;
     monsters = [];
-    
+
     // --- 플레이어 상태 회복 및 버프 턴 감소 ---
     player.hp = player.maxHp; // 다음 층 이동 시 체력은 완전 회복
     const baseMpRecovery = 20;
@@ -1070,7 +1115,7 @@ function nextFloor() {
         player.inventory.push({ ...potion, type: potionType });
         log(`바닥에서 ${potion.name}을(를) 주웠다!`, 'log-system', { fontSize: '20px' });
     }
-    
+
     // --- 새로운 층의 몬스터 생성 및 UI 업데이트 ---
     monsters = generateMonstersForFloor(floor);
 
@@ -1087,6 +1132,11 @@ function nextFloor() {
     // 자동 저장 기능: 다음 층으로 이동 시 게임 상태를 자동으로 저장합니다.
     if (isLoggedIn()) {
         saveGame(true); // UI를 블록하지 않도록 await 없이 호출
+    }
+
+    // 방치형 자동 턴 시작 (활성화 시)
+    if (isAutoBattle) {
+        setTimeout(autoPlayPlayerTurn, 800);
     }
 }
 
@@ -1194,18 +1244,36 @@ async function gameOver() {
     stopBGM();
     playSound('game-over');
     isGameOver = true;
-    log("체력이 0이 되었습니다. 게임 오버...", 'log-monster');
+    log(`💀 지하 ${floor}층에서 패배했습니다. 마지막 전투 기록을 저장합니다.`, 'log-system', { color: '#ef4444' });
     toggleControls(false); // Disable game controls
- 
+
+    // 방치 기록 저장
+    const record = { floor, coins: player.coins, time: new Date().toLocaleString() };
+    localStorage.setItem('lastIdleRecord', JSON.stringify(record));
+
     await submitScore(); // 점수 제출
- 
+
     if (isLoggedIn()) {
         log("최종 게임 상태를 저장합니다...", "log-system");
         await saveGame(true); // Silently save the game state
     }
- 
-    // 게임 오버 모달을 표시합니다.
-    showGameOverModal(floor);
+
+    // 게임 오버 모달을 표시하지 않고 3초 후 자동 환생 (무한 방치)
+    let countdown = 3;
+    log(`🔄 ${countdown}초 후 1층에서 자동으로 환생합니다...`, 'log-system');
+
+    const logBox = document.getElementById('log-box');
+    const msgElement = logBox.lastElementChild;
+
+    const interval = setInterval(() => {
+        countdown--;
+        if (countdown > 0) {
+            msgElement.innerText = `🔄 ${countdown}초 후 1층에서 자동으로 환생합니다...`;
+        } else {
+            clearInterval(interval);
+            startNewGame(true); // 환생 모드로 새 게임 시작
+        }
+    }, 1000);
 }
 
 /**
@@ -1215,10 +1283,19 @@ async function gameOver() {
  */
 function toggleControls(enable) {
     if (enable) {
+        // 플레이어 턴이 돌아오면 메인 컨트롤을 보여주는 기존 로직 유지
         showMainControls();
     } else {
         const btns = document.querySelectorAll('.controls button');
-        btns.forEach(btn => btn.disabled = !enable);
+        btns.forEach(btn => {
+            const text = btn.innerText;
+            // 스킬 관련 버튼만 비활성화 처리 (나머지는 계속 활성화)
+            if (text.includes('스킬') || text.includes('공격') || text.includes('휩쓸기') || text.includes('방어 태세')) {
+                btn.disabled = true;
+            } else {
+                btn.disabled = false;
+            }
+        });
     }
 }
 
@@ -1255,11 +1332,11 @@ function confirmStatUp() {
     Object.assign(player, tempStats);
 
     recalculatePlayerStats();
-    
+
     // 분배된 스탯을 적용하고 UI를 업데이트합니다. 모달은 닫히지 않습니다.
     updateUI();
     renderStatUpModal(); // 스탯 모달 UI를 새로운 값으로 다시 렌더링합니다.
-    
+
     // 추가 레벨업이 있는지 확인
     checkForLevelUp();
 }
@@ -1300,7 +1377,7 @@ function recalculatePlayerStats() {
 
     const weaponBonus = player.equippedWeapon ? player.equippedWeapon.atkBonus : 0;
     const armorBonus = player.equippedArmor ? player.equippedArmor.maxHpBonus : 0;
-    
+
     // 스탯 포인트와 전리품 보너스를 합산
     const finalStr = player.str + lootBonuses.str;
     const finalVit = player.vit + lootBonuses.vit;
@@ -1368,7 +1445,14 @@ function equipItem(type, index) {
         player.hp = Math.round(player.maxHp * hpPercentage);
     }
     updateUI();
-    renderEquipment(); // 버튼 상태 갱신을 위해 다시 렌더링
+    // UI 업데이트 (현재 모달이 상점인지 인벤토리인지에 따라 렌더링)
+    if (document.getElementById('shop-modal') && document.getElementById('shop-modal').style.display !== 'none') {
+        if (typeof renderShopItems === 'function') renderShopItems();
+    }
+    if (document.getElementById('equipment-modal') && document.getElementById('equipment-modal').style.display !== 'none') {
+        if (typeof renderInventoryItems === 'function') renderInventoryItems();
+        if (typeof renderEquipment === 'function') renderEquipment();
+    }
 }
 
 /**
@@ -1382,8 +1466,26 @@ function useLootItem(index) {
 }
 
 //** ============================================================ **//
-//** 6. 상점 시스템
+//** 6. 상점 및 시스템 모달 관리
 //** ============================================================ **//
+
+/**
+ * 자동 전투 상태를 전환합니다.
+ */
+function toggleAutoBattle() {
+    playSound('click');
+    isAutoBattle = !isAutoBattle;
+
+    if (isAutoBattle) {
+        log("▶️ 자동 전투가 재개되었습니다.", 'log-system', { color: '#22c55e' });
+        if (isPlayerTurn && !isGameOver) {
+            setTimeout(autoPlayPlayerTurn, 800);
+        }
+    } else {
+        log("⏸️ 자동 전투가 일시정지되었습니다.", 'log-system', { color: '#fbbf24' });
+    }
+    showMainControls(); // 버튼 텍스트 업데이트
+}
 
 /**
  * 전리품을 판매하여 골드를 획득하는 함수
@@ -1397,15 +1499,59 @@ function sellLootItem(index) {
     player.lootInventory.splice(index, 1);
 
     log(`💰 ${loot.name}을(를) 판매하여 ${loot.sellPrice}G를 획득했습니다.`, 'log-system');
-    alert(`${loot.name}을(를) ${loot.sellPrice}G에 판매했습니다.`);
 
     // 스탯 및 UI 즉시 갱신
     recalculatePlayerStats();
     updateUI();
 
-    // 상점 UI 갱신
-    document.getElementById('shop-coins').innerText = player.coins;
-    renderSellableLoot();
+    // 상점 및 장비창 UI 갱신
+    const shopCoinsEl = document.getElementById('shop-coins');
+    if (shopCoinsEl) shopCoinsEl.innerText = player.coins;
+
+    if (document.getElementById('shop-modal') && document.getElementById('shop-modal').style.display !== 'none') {
+        renderSellableLoot();
+    }
+    if (document.getElementById('equipment-modal') && document.getElementById('equipment-modal').style.display !== 'none') {
+        if (typeof renderLootInventory === 'function') renderLootInventory();
+    }
+}
+
+/**
+ * 장비를 판매하여 골드를 획득하는 함수
+ */
+function sellEquipmentItem(type, index) {
+    let list, itemName, cost;
+    if (type === 'armor') {
+        list = player.armorInventory;
+    } else {
+        list = player.weaponInventory;
+    }
+    const item = list[index];
+    if (!item) return;
+
+    cost = Math.floor((item.cost || 100) * 0.5); // 구매 가격의 50%를 환불로 가정
+    itemName = item.name;
+
+    player.coins += cost;
+    list.splice(index, 1);
+
+    log(`💰 ${itemName}을(를) 판매하여 ${cost}G를 획득했습니다.`, 'log-system');
+
+    recalculatePlayerStats();
+    updateUI();
+
+    // 상점 모달의 골드 표시도 갱신
+    const shopCoinsEl = document.getElementById('shop-coins');
+    if (shopCoinsEl) shopCoinsEl.innerText = player.coins;
+
+    // UI 업데이트 (현재 모달이 상점인지 인벤토리인지에 따라 렌더링)
+    if (document.getElementById('shop-modal') && document.getElementById('shop-modal').style.display !== 'none') {
+        if (typeof renderShopItems === 'function') renderShopItems();
+    }
+    if (document.getElementById('equipment-modal') && document.getElementById('equipment-modal').style.display !== 'none') {
+        if (typeof renderInventoryItems === 'function') renderInventoryItems();
+        if (typeof renderEquipment === 'function') renderEquipment();
+    }
 }
 
 /**
@@ -1445,7 +1591,7 @@ function buyItem(type, cost, data) {
         player.inventory.push({ type: type, ...data });
         alert(`${data.name}을(를) 인벤토리에 넣었습니다.`);
     }
-    
+
     document.getElementById('shop-coins').innerText = player.coins;
     if (document.getElementById('shop-modal').style.display === 'flex') {
         renderShopItems();
@@ -1502,17 +1648,48 @@ function startGame(loadedState = null) {
     }
     updateUI();
     toggleControls(isPlayerTurn);
+
+    // 게임 시작 시 자동 타겟팅/턴 진행
+    if (isPlayerTurn && !isGameOver) {
+        setTimeout(autoPlayPlayerTurn, 800);
+    }
 }
 
 /**
- * 새로운 게임을 시작하는 함수.
- * - 모든 게임 상태를 초기값으로 리셋합니다.
- * @param {boolean} [isNew=false] - 로그인 상태에서 '새 게임' 버튼을 눌렀는지 여부 (경고창 표시용).
+ * 새로운 게임을 시작하는 함수 (방치형 환생 대응).
+ * - 모든 게임 상태를 초기값으로 리셋합니다 (환생 시 템/골드 유지).
+ * @param {boolean} [isReincarnation=false] - 환생 여부
  */
-function startNewGame(isNew = false) {
-    if (isNew && isLoggedIn() && !confirm("정말로 새로운 게임을 시작하시겠습니까? 기존에 저장된 데이터는 덮어씌워집니다.")) {
-        return;
+function startNewGame(isReincarnation = false) {
+    if (!isReincarnation) { // 홈 화면에서 '새 게임 시작'을 누른 경우
+        let confirmMessage = "정말로 새로운 게임을 시작하시겠습니까?\n이전 아이템, 스탯, 물약 등 모든 진행 상황이 초기화됩니다.";
+        if (isLoggedIn()) {
+            confirmMessage += "\n서버에 저장된 데이터도 덮어씌워집니다.";
+        }
+        if (!confirm(confirmMessage)) {
+            return;
+        }
     }
+
+    // 보존할 변수 (환생 시)
+    let savedData = null;
+    if (isReincarnation) {
+        savedData = {
+            coins: player.coins,
+            level: player.level,
+            xp: player.xp,
+            statPoints: player.statPoints,
+            str: player.str, vit: player.vit, mag: player.mag, mnd: player.mnd,
+            agi: player.agi, int: player.int, luk: player.luk, fcs: player.fcs,
+            inventory: player.inventory,
+            armorInventory: player.armorInventory,
+            weaponInventory: player.weaponInventory,
+            lootInventory: player.lootInventory,
+            equippedArmor: player.equippedArmor,
+            equippedWeapon: player.equippedWeapon
+        };
+    }
+
     // 게임 상태 초기화
     const initialPlayerState = {
         baseMaxHp: 35, maxHp: 35, hp: 35, baseMaxMp: 40, maxMp: 40, mp: 40,
@@ -1532,6 +1709,13 @@ function startNewGame(isNew = false) {
         ]
     };
     Object.assign(player, initialPlayerState);
+
+    // 저장했던 재화/아이템 복구
+    if (savedData) {
+        Object.assign(player, savedData);
+        log("🔄 환생했습니다! 1층부터 다시 시작하지만 아이템과 스탯은 유지됩니다.", 'log-system', { color: '#fbbf24' });
+    }
+
     floor = 1;
     turn = 1;
     isPlayerTurn = true;
@@ -1735,8 +1919,9 @@ async function loadGame() {
 
         // Check for invalid game state (e.g., saved on game over)
         if (loadedState && loadedState.player && loadedState.player.hp <= 0) {
-            alert("저장된 게임 데이터가 유효하지 않습니다. 새 게임을 시작합니다.");
-            startNewGame();
+            alert("캐릭터가 지난번 전투에서 패배했습니다. 아이템과 스탯을 유지한 채 1층에서 환생합니다!");
+            Object.assign(player, loadedState.player);
+            startNewGame(true);
             return;
         }
 
@@ -1753,7 +1938,7 @@ async function loadGame() {
  */
 async function submitScore() {
     if (!isLoggedIn()) return; // 로그인 상태가 아니면 점수 제출 안 함
-    
+
     const score = floor;
     try {
         const response = await fetch(`${API_URL}/scores`, {
@@ -1770,6 +1955,23 @@ async function submitScore() {
     }
 }
 
+/**
+ * (자동 갱신용) 스코어보드 데이터를 조용히 가져와 UI를 다시 렌더링하는 함수.
+ */
+async function refreshScoreboardData() {
+    try {
+        const response = await fetch(`${API_URL}/scores`);
+        if (!response.ok) {
+            // 자동 갱신 중에는 오류를 사용자에게 알리지 않고 콘솔에만 기록
+            console.error('스코어보드 자동 갱신 실패:', response.statusText);
+            return;
+        }
+        const scores = await response.json();
+        renderScoreboard(scores);
+    } catch (error) {
+        console.error('스코어보드 자동 갱신 중 오류 발생:', error);
+    }
+}
 /**
  * 서버에서 전체 사용자 랭킹(스코어보드)을 가져와 표시하는 함수.
  */
@@ -1803,6 +2005,13 @@ async function fetchAndShowScores() {
 
         renderScoreboard(scores);
         openScoreboardModal();
+
+        // 10초마다 스코어보드 갱신 시작
+        if (scoreboardRefreshInterval) {
+            clearInterval(scoreboardRefreshInterval); // 혹시 모를 중복 실행 방지
+        }
+        scoreboardRefreshInterval = setInterval(refreshScoreboardData, 10000);
+
     } catch (error) {
         alert(error.message);
     }
@@ -1817,7 +2026,7 @@ function fetchAndShowNotices() {
     const noticeBadgeLoggedIn = document.getElementById('notice-new-badge-loggedin');
     if (noticeBadgeGuest) noticeBadgeGuest.style.display = 'none';
     if (noticeBadgeLoggedIn) noticeBadgeLoggedIn.style.display = 'none';
-    
+
     if (updateHistory.length > 0) {
         localStorage.setItem('lastSeenNoticeVersion', updateHistory[0].version);
     }
@@ -1857,7 +2066,7 @@ async function toggleNoticeDetail(element, filePath) {
     } else {
         // 닫혀있으면 엽니다.
         element.classList.add('active');
-        
+
         // 내용이 아직 로드되지 않았다면 fetch로 불러옵니다.
         if (detailsEl.innerHTML.trim() === '') {
             try {
@@ -1953,6 +2162,16 @@ async function handleUpdateProfile() {
  * - 사운드 로드, UI 초기화, 로그인 상태 확인 등을 수행합니다.
  */
 async function init() {
+    // 방치 기록 확인
+    const lastRecord = localStorage.getItem('lastIdleRecord');
+    if (lastRecord) {
+        try {
+            const record = JSON.parse(lastRecord);
+            alert(`[오프라인 방치 기록]\n\n마지막 전투에서는 ${record.floor}층에서 패배했습니다.\n현재 골드: ${record.coins}G\n기록 일시: ${record.time}\n\n도전은 1층부터 다시 이어집니다!`);
+            localStorage.removeItem('lastIdleRecord');
+        } catch (e) { }
+    }
+
     await loadSounds(); // 사운드, 특히 첫 BGM이 로드될 때까지 기다립니다.
     showStartMenu(); // UI와 BGM을 먼저 표시하고 재생합니다.
     const username = localStorage.getItem('username');
@@ -1978,10 +2197,10 @@ function handleKeydown(e) {
 
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
         e.preventDefault();
-        
+
         let newIndex = player.targetIndex;
         const direction = e.key === 'ArrowRight' ? 1 : -1;
-        
+
         // 살아있는 다음 타겟을 찾을 때까지 반복
         do {
             newIndex = (newIndex + direction + monsters.length) % monsters.length;

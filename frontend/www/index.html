@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>준혁의 동굴 RPG</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="/manifest.json">
+
 <body>
     <!-- ==================== 시작 메뉴 ==================== -->
     <div id="start-menu">
@@ -17,17 +19,22 @@
         <div id="guest-menu">
             <button class="start-btn" onclick="startNewGame()">새 게임 시작</button>
             <button class="start-btn" onclick="openLoginModal()">로그인 / 회원가입</button>
-            <button class="start-btn" onclick="fetchAndShowNotices()">공지사항<span class="new-badge" id="notice-new-badge-guest" style="display: none;">N</span></button>
-            <button class="start-btn" onclick="fetchAndShowScores()">스코어보드<span class="new-badge" id="scoreboard-new-badge-guest" style="display: none;">N</span></button>
+            <button class="start-btn" onclick="fetchAndShowNotices()">공지사항<span class="new-badge"
+                    id="notice-new-badge-guest" style="display: none;">N</span></button>
+            <button class="start-btn" onclick="fetchAndShowScores()">스코어보드<span class="new-badge"
+                    id="scoreboard-new-badge-guest" style="display: none;">N</span></button>
         </div>
         <div id="logged-in-menu" style="display: none;">
             <p class="welcome-msg"><span id="logged-in-user"></span>님, 환영합니다!</p>
             <button class="start-btn" onclick="loadGame()">게임 이어하기</button>
-            <button class="start-btn" onclick="startNewGame(true)">새 게임 시작</button>
-            <button class="start-btn" onclick="fetchAndShowNotices()">공지사항<span class="new-badge" id="notice-new-badge-loggedin" style="display: none;">N</span></button>
+            <button class="start-btn" onclick="startNewGame()">새 게임 시작</button>
+            <button class="start-btn" onclick="fetchAndShowNotices()">공지사항<span class="new-badge"
+                    id="notice-new-badge-loggedin" style="display: none;">N</span></button>
             <button class="start-btn" onclick="openEditProfileModal()">회원정보 수정</button>
-            <button class="start-btn" onclick="fetchAndShowScores()">스코어보드<span class="new-badge" id="scoreboard-new-badge-loggedin" style="display: none;">N</span></button>
-            <a id="admin-link" href="/admin" class="start-btn" style="display: none; text-decoration: none; align-items: center; justify-content: center;">관리자 페이지</a>
+            <button class="start-btn" onclick="fetchAndShowScores()">스코어보드<span class="new-badge"
+                    id="scoreboard-new-badge-loggedin" style="display: none;">N</span></button>
+            <a id="admin-link" href="/admin" class="start-btn"
+                style="display: none; text-decoration: none; align-items: center; justify-content: center;">관리자 페이지</a>
             <button class="start-btn" onclick="logout()">로그아웃</button>
         </div>
     </div>
@@ -38,179 +45,217 @@
         <div class="game-container">
             <!-- 상단 정보 (층, 턴, 골드, 버프) -->
             <div class="header">
-            <span class="floor-badge">지하 <span id="floor-num">1</span>층</span>
-            <span class="floor-badge" style="background: #4b5563; margin-left: 5px;">TURN <span id="turn-num">1</span></span>
-            <span class="floor-badge" style="background: #fbbf24; color: #000; margin-left: 5px;">🪙 <span id="player-coins">0</span></span>
-            <span class="floor-badge" id="buff-badge" style="background: #ef4444; margin-left: 5px; display: none;">⚔️<span id="buff-turns">0</span></span>
-            <span class="floor-badge" id="crit-buff-badge" style="background: #8b5cf6; margin-left: 5px; display: none;">🔮<span id="crit-buff-turns">0</span></span>
-            <span class="floor-badge" id="black-flash-badge" style="background: #111; color: #fff; border: 1px solid #fff; margin-left: 5px; display: none;">⚫<span id="black-flash-turns">0</span></span>
-            <span class="floor-badge" id="blessing-badge" style="background: #ca8a04; margin-left: 5px; display: none;" title="">👑</span>
-        </div>
+                <span class="floor-badge">지하 <span id="floor-num">1</span>층</span>
+                <span class="floor-badge" style="background: #4b5563; margin-left: 5px;">TURN <span
+                        id="turn-num">1</span></span>
+                <span class="floor-badge" style="background: #fbbf24; color: #000; margin-left: 5px;">🪙 <span
+                        id="player-coins">0</span></span>
+                <span class="floor-badge" id="buff-badge"
+                    style="background: #ef4444; margin-left: 5px; display: none;">⚔️<span
+                        id="buff-turns">0</span></span>
+                <span class="floor-badge" id="crit-buff-badge"
+                    style="background: #8b5cf6; margin-left: 5px; display: none;">🔮<span
+                        id="crit-buff-turns">0</span></span>
+                <span class="floor-badge" id="black-flash-badge"
+                    style="background: #111; color: #fff; border: 1px solid #fff; margin-left: 5px; display: none;">⚫<span
+                        id="black-flash-turns">0</span></span>
+                <span class="floor-badge" id="blessing-badge"
+                    style="background: #ca8a04; margin-left: 5px; display: none;" title="">👑</span>
+            </div>
 
             <!-- 전투 필드 (캐릭터 표시 영역) -->
             <div class="battle-field" id="battle-field">
-            <div class="character" id="player-character">
-                <div class="emoji" id="player-emoji"></div>
-                <div class="name">용사</div>
-                <div class="hp-bar-bg"><div class="hp-bar-fill" id="player-hp-bar"></div></div>
-                <div class="hp-text"><span id="player-hp">100</span> / <span id="player-max-hp">100</span></div>
-            </div>
+                <div class="character" id="player-character">
+                    <div class="emoji" id="player-emoji"></div>
+                    <div class="name">용사</div>
+                    <div class="hp-bar-bg">
+                        <div class="hp-bar-fill" id="player-hp-bar"></div>
+                    </div>
+                    <div class="hp-text"><span id="player-hp">100</span> / <span id="player-max-hp">100</span></div>
+                </div>
 
-            <div id="monster-area">
-                <!-- 몬스터들이 동적으로 생성됩니다 -->
+                <div id="monster-area">
+                    <!-- 몬스터들이 동적으로 생성됩니다 -->
+                </div>
             </div>
-        </div>
 
             <!-- 전투 및 시스템 로그 -->
             <div class="log-box" id="log-box">
-            <div class="log-msg log-system">동굴 탐험을 시작합니다...</div>
-        </div>
-
-        <!-- MP 및 경험치 바 -->
-        <div class="mp-bar-container">
-            <div class="level-badge" style="color: #60a5fa;">MP</div>
-            <div class="xp-bar-bg">
-                <div class="mp-bar-fill" id="player-mp-bar"></div>
+                <div class="log-msg log-system">동굴 탐험을 시작합니다...</div>
             </div>
-            <div class="xp-text">
-                <span id="player-mp">50</span> / <span id="player-max-mp">50</span>
-            </div>
-        </div>
 
-        <div class="xp-bar-container">
-            <div class="level-badge">LV.<span id="player-level">1</span></div>
-            <div class="xp-bar-bg">
-                <div class="xp-bar-fill" id="player-xp-bar"></div>
-            </div>
-            <div class="xp-text">
-                <span id="player-xp">0</span> / <span id="player-xp-next">100</span> XP
-            </div>
-        </div>
-
-        <!-- 하단 컨트롤 버튼 -->
-        <div class="controls" id="controls-panel">
-            <button class="btn-attack" onclick="showSkillSelection()">⚔️ 스킬</button>
-            <button class="btn-heal" onclick="showAllPotions()">🧪 물약</button>
-            <button class="btn-armor" onclick="openInventoryModal()">🛡️ 장비/스탯</button>
-        </div>
-    </div>
-
-    <!-- ==================== 모달 (팝업창) 영역 ==================== -->
-
-    <!-- 레벨업 알림 모달 -->
-    <div id="levelup-modal">
-        <div class="levelup-text">경험치를 획득했다!</div>
-        <div style="font-size: 24px; color: #ccc;">잠시 후 다음 층으로 이동합니다...</div>
-    </div>
-
-    <!-- 상점 모달 -->
-    <div id="shop-modal">
-        <div class="shop-title" style="font-size: 24px;">⛺ 떠돌이 상인</div>
-        <div class="floor-badge" style="background: #fbbf24; color: #000; margin-bottom: 15px;">🪙 <span id="shop-coins">0</span></div>
-        
-        <div class="shop-container" style="flex-direction: column;">
-            <div class="shop-row">
-                <div class="shop-section">
-                    <h3>💊 HP 물약</h3>
-                    <div class="shop-items" id="heal-potion-shop-items"></div>
+            <!-- MP 및 경험치 바 -->
+            <div class="mp-bar-container">
+                <div class="level-badge" style="color: #60a5fa;">MP</div>
+                <div class="xp-bar-bg">
+                    <div class="mp-bar-fill" id="player-mp-bar"></div>
                 </div>
-                <div class="shop-section">
-                    <h3>💧 MP 물약</h3>
-                    <div class="shop-items" id="mp-potion-shop-items"></div>
-                </div>
-                <div class="shop-section">
-                    <h3>🧪 공격 물약</h3>
-                    <div class="shop-items" id="buff-potion-shop-items"></div>
-                </div>
-                <div class="shop-section">
-                    <h3>🔮 집중 물약</h3>
-                    <div class="shop-items" id="crit-potion-shop-items"></div>
+                <div class="xp-text">
+                    <span id="player-mp">50</span> / <span id="player-max-mp">50</span>
                 </div>
             </div>
-            <div class="shop-row">
-                <div class="shop-section">
-                    <h3>🛡️ 방어구</h3>
-                    <div class="shop-items" id="armor-shop-items"></div>
+
+            <div class="xp-bar-container">
+                <div class="level-badge">LV.<span id="player-level">1</span></div>
+                <div class="xp-bar-bg">
+                    <div class="xp-bar-fill" id="player-xp-bar"></div>
                 </div>
-                <div class="shop-section">
-                    <h3>🗡️ 무기</h3>
-                    <div class="shop-items" id="weapon-shop-items"></div>
+                <div class="xp-text">
+                    <span id="player-xp">0</span> / <span id="player-xp-next">100</span> XP
                 </div>
+            </div>
+
+            <!-- 하단 컨트롤 버튼 -->
+            <div class="controls" id="controls-panel">
+                <button class="btn-attack" onclick="showSkillSelection()">⚔️ 스킬</button>
+                <button class="btn-heal" onclick="showAllPotions()">🧪 물약</button>
+                <button class="btn-armor" onclick="openInventoryModal()">🛡️ 장비/스탯</button>
             </div>
         </div>
-        <button style="margin-top: 20px; background: #ef4444; box-shadow: 0 4px 0 #991b1b;" onclick="closeShop()">상점 나가기</button>
-    </div>
 
-    <!-- (사용되지 않음) 구 인벤토리 모달 -->
-    <div id="inventory-modal">
-        <div class="shop-title" style="font-size: 24px;">🎒 인벤토리</div>
-        <div class="inventory-list" id="inventory-list">
-            <!-- 아이템 목록이 JS로 생성됨 -->
+        <!-- ==================== 모달 (팝업창) 영역 ==================== -->
+
+        <!-- 레벨업 알림 모달 -->
+        <div id="levelup-modal">
+            <div class="levelup-text">경험치를 획득했다!</div>
+            <div style="font-size: 24px; color: #ccc;">잠시 후 다음 층으로 이동합니다...</div>
         </div>
-        <button style="margin-top: 30px; background: #4b5563; box-shadow: 0 4px 0 #374151;" onclick="closeInventory()">닫기</button>
-    </div>
 
-    <!-- 물약 사용 모달 -->
-    <div id="item-select-modal">
-        <div class="shop-title" style="font-size: 24px;" id="item-select-title">물약 사용</div>
-        <div class="potion-container">
-            <div class="potion-section">
-                <h3>💊 회복 물약</h3>
-                <div class="potion-list" id="potion-list-heal"></div>
-            </div>
-            <div class="potion-section">
-                <h3>💧 마나 물약</h3>
-                <div class="potion-list" id="potion-list-mp"></div>
-            </div>
-            <div class="potion-section">
-                <h3>🧪 공격 강화 물약</h3>
-                <div class="potion-list" id="potion-list-buff"></div>
-            </div>
-            <div class="potion-section">
-                <h3>🔮 집중 강화 물약</h3>
-                <div class="potion-list" id="potion-list-critBuff"></div>
-            </div>
-        </div>
-        <button style="margin-top: 20px; background: #4b5563; box-shadow: 0 4px 0 #374151;" onclick="closeItemSelect()">닫기</button>
-    </div>
+        <!-- 상점 모달 -->
+        <div id="shop-modal">
+            <div class="shop-title" style="font-size: 24px;">⛺ 떠돌이 상인</div>
+            <div class="floor-badge" style="background: #fbbf24; color: #000; margin-bottom: 15px;">🪙 <span
+                    id="shop-coins">0</span></div>
 
-    <!-- 장비/전리품/스탯 통합 관리 모달 -->
-    <div id="equipment-modal">
-        <div class="shop-title" style="font-size: 24px;">🛡️ 장비 및 스탯 관리</div>
-        <div class="management-container">
-            <!-- 장비 섹션 -->
-            <div class="management-section">
-                <div id="current-equipment-display">
-                    <!-- 현재 착용 장비 표시 -->
-                </div>
-                <div class="equipment-container">
-                    <div class="equipment-section">
-                        <h3>🛡️ 보유 방어구</h3>
-                        <div class="equipment-list" id="equipment-armor-list"></div>
+            <div class="shop-container" style="flex-direction: column;">
+                <div class="shop-row">
+                    <div class="shop-section">
+                        <h3>💊 HP 물약</h3>
+                        <div class="shop-items" id="heal-potion-shop-items"></div>
                     </div>
-                    <div class="equipment-section">
-                        <h3>🗡️ 보유 무기</h3>
-                        <div class="equipment-list" id="equipment-weapon-list"></div>
+                    <div class="shop-section">
+                        <h3>💧 MP 물약</h3>
+                        <div class="shop-items" id="mp-potion-shop-items"></div>
+                    </div>
+                    <div class="shop-section">
+                        <h3>🧪 공격 물약</h3>
+                        <div class="shop-items" id="buff-potion-shop-items"></div>
+                    </div>
+                    <div class="shop-section">
+                        <h3>🔮 집중 물약</h3>
+                        <div class="shop-items" id="crit-potion-shop-items"></div>
+                    </div>
+                </div>
+                <div class="shop-row">
+                    <div class="shop-section">
+                        <h3>🛡️ 방어구 상점</h3>
+                        <div class="shop-items" id="armor-shop-items"></div>
+                    </div>
+                    <div class="shop-section">
+                        <h3>🗡️ 무기 상점</h3>
+                        <div class="shop-items" id="weapon-shop-items"></div>
+                    </div>
+                </div>
+                <!-- 내 장비 관리용 -->
+                <div class="shop-row">
+                    <div class="shop-section" style="flex: 1 1 100%;">
+                        <h3 style="background: #374151; padding: 5px; border-radius: 4px; text-align: center;">🎒 내 장비
+                            (착용 및 판매)</h3>
+                        <div style="display:flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+                            <div style="flex: 1; min-width: 250px;">
+                                <h4 style="color: #fbbf24; margin-bottom: 5px;">🛡️ 보유 방어구</h4>
+                                <div class="equipment-list" id="shop-my-armor-list"
+                                    style="max-height: 15vh; overflow-y: auto;"></div>
+                            </div>
+                            <div style="flex: 1; min-width: 250px;">
+                                <h4 style="color: #fbbf24; margin-bottom: 5px;">🗡️ 보유 무기</h4>
+                                <div class="equipment-list" id="shop-my-weapon-list"
+                                    style="max-height: 15vh; overflow-y: auto;"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <!-- 스탯 섹션 -->
-            <div class="management-section">
-                <h3 style="text-align: center; margin-bottom: 15px;">✨ 스탯 분배</h3>
-                <div id="stat-points-display">분배할 스탯 포인트: <span>0</span></div>
-                <div id="stat-current-values">
-                    <!-- 스탯 분배 시 예상 능력치 표시 -->
+            <button style="margin-top: 20px; background: #ef4444; box-shadow: 0 4px 0 #991b1b;" onclick="closeShop()">상점
+                나가기</button>
+        </div>
+
+        <!-- (사용되지 않음) 구 인벤토리 모달 -->
+        <div id="inventory-modal">
+            <div class="shop-title" style="font-size: 24px;">🎒 인벤토리</div>
+            <div class="inventory-list" id="inventory-list">
+                <!-- 아이템 목록이 JS로 생성됨 -->
+            </div>
+            <button style="margin-top: 30px; background: #4b5563; box-shadow: 0 4px 0 #374151;"
+                onclick="closeInventory()">닫기</button>
+        </div>
+
+        <!-- 물약 사용 모달 -->
+        <div id="item-select-modal">
+            <div class="shop-title" style="font-size: 24px;" id="item-select-title">물약 사용</div>
+            <div class="potion-container">
+                <div class="potion-section">
+                    <h3>💊 회복 물약</h3>
+                    <div class="potion-list" id="potion-list-heal"></div>
                 </div>
-                <div class="stat-up-list"></div>
-                <div style="display: flex; gap: 10px; margin-top: auto; justify-content: center;">
-                    <button id="reset-stats-btn" class="btn-heal" style="padding: 15px; font-size: 18px; background-color: #6b7280; box-shadow: 0 4px 0 #4b5563;" onclick="resetTempStats()">초기화</button>
-                    <button id="confirm-stats-btn" class="btn-attack" style="padding: 15px; font-size: 18px;" onclick="confirmStatUp()">분배 완료</button>
+                <div class="potion-section">
+                    <h3>💧 마나 물약</h3>
+                    <div class="potion-list" id="potion-list-mp"></div>
+                </div>
+                <div class="potion-section">
+                    <h3>🧪 공격 강화 물약</h3>
+                    <div class="potion-list" id="potion-list-buff"></div>
+                </div>
+                <div class="potion-section">
+                    <h3>🔮 집중 강화 물약</h3>
+                    <div class="potion-list" id="potion-list-critBuff"></div>
                 </div>
             </div>
+            <button style="margin-top: 20px; background: #4b5563; box-shadow: 0 4px 0 #374151;"
+                onclick="closeItemSelect()">닫기</button>
         </div>
-        <button style="margin-top: 30px; background: #4b5563; box-shadow: 0 4px 0 #374151;" onclick="closeEquipment()">닫기</button>
+
+        <!-- 장비/전리품/스탯 통합 관리 모달 -->
+        <div id="equipment-modal">
+            <div class="shop-title" style="font-size: 24px;">🛡️ 장비 및 스탯 관리</div>
+            <div class="management-container">
+                <!-- 장비 섹션 -->
+                <div class="management-section">
+                    <div id="current-equipment-display">
+                        <!-- 현재 착용 장비 표시 -->
+                    </div>
+                    <div class="equipment-container">
+                        <div class="equipment-section">
+                            <h3>🛡️ 보유 방어구</h3>
+                            <div class="equipment-list" id="equipment-armor-list"></div>
+                        </div>
+                        <div class="equipment-section">
+                            <h3>🗡️ 보유 무기</h3>
+                            <div class="equipment-list" id="equipment-weapon-list"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 스탯 섹션 -->
+                <div class="management-section">
+                    <h3 style="text-align: center; margin-bottom: 15px;">✨ 스탯 분배</h3>
+                    <div id="stat-points-display">분배할 스탯 포인트: <span>0</span></div>
+                    <div id="stat-current-values">
+                        <!-- 스탯 분배 시 예상 능력치 표시 -->
+                    </div>
+                    <div class="stat-up-list"></div>
+                    <div style="display: flex; gap: 10px; margin-top: auto; justify-content: center;">
+                        <button id="reset-stats-btn" class="btn-heal"
+                            style="padding: 15px; font-size: 18px; background-color: #6b7280; box-shadow: 0 4px 0 #4b5563;"
+                            onclick="resetTempStats()">초기화</button>
+                        <button id="confirm-stats-btn" class="btn-attack" style="padding: 15px; font-size: 18px;"
+                            onclick="confirmStatUp()">분배 완료</button>
+                    </div>
+                </div>
+            </div>
+            <button style="margin-top: 30px; background: #4b5563; box-shadow: 0 4px 0 #374151;"
+                onclick="closeEquipment()">닫기</button>
+        </div>
     </div>
-</div>
 
     <!-- 로그인 모달 -->
     <div id="login-modal" style="display: none;">
@@ -220,7 +265,8 @@
                 <input type="text" id="login-username" placeholder="사용자 이름" required>
                 <input type="password" id="login-password" placeholder="비밀번호" required>
                 <div id="login-error-msg" style="color: #ef4444; text-align: center; display: none;"></div>
-                <button type="button" class="btn-attack" style="padding: 15px; font-size: 18px;" onclick="handleLogin()">로그인</button>
+                <button type="button" class="btn-attack" style="padding: 15px; font-size: 18px;"
+                    onclick="handleLogin()">로그인</button>
                 <p class="switch-auth-msg">아직 회원이 아니신가요? <a href="#" onclick="switchToRegisterModal(event)">회원가입</a></p>
                 <p class="switch-auth-msg" style="margin-top: 8px;">
                     <a href="#" onclick="switchToFindAccountModal(event)">아이디/비밀번호를 잊으셨나요?</a>
@@ -236,7 +282,8 @@
             <div class="shop-title">아이디/비밀번호 찾기</div>
             <div id="find-account-form">
                 <input type="email" id="find-email" placeholder="가입한 이메일" required>
-                <input type="text" id="find-birthdate" placeholder="생년월일 (YYYY-MM-DD)" onfocus="(this.type='date')" onblur="(this.type='text')" required>
+                <input type="text" id="find-birthdate" placeholder="생년월일 (YYYY-MM-DD)" onfocus="(this.type='date')"
+                    onblur="(this.type='text')" required>
                 <div id="find-account-result" style="display: none;"></div>
                 <div class="login-buttons">
                     <button class="btn-buff" onclick="handleFindId()">아이디 찾기</button>
@@ -268,7 +315,8 @@
                     <option value="ETC">기타</option>
                 </select>
                 <div id="register-error-msg" style="color: #ef4444; text-align: center; display: none;"></div>
-                <button type="button" class="btn-heal" style="padding: 15px; font-size: 18px;" onclick="handleRegister()">회원가입</button>
+                <button type="button" class="btn-heal" style="padding: 15px; font-size: 18px;"
+                    onclick="handleRegister()">회원가입</button>
                 <p class="switch-auth-msg">이미 회원이신가요? <a href="#" onclick="switchToLoginModal(event)">로그인</a></p>
             </div>
             <button class="modal-close-btn" onclick="closeRegisterModal()">닫기</button>
@@ -293,7 +341,8 @@
             <div id="edit-profile-form">
                 <div class="form-group">
                     <label for="edit-username">아이디</label>
-                    <input type="text" id="edit-username" placeholder="사용자 이름" readonly style="background: #444; cursor: not-allowed;">
+                    <input type="text" id="edit-username" placeholder="사용자 이름" readonly
+                        style="background: #444; cursor: not-allowed;">
                 </div>
                 <div class="form-group">
                     <label for="edit-email">이메일</label>
@@ -315,7 +364,8 @@
                     </select>
                 </div>
                 <hr style="border-color: #444; margin: 10px 0;">
-                <p style="font-size: 14px; color: #ccc; text-align: left; margin-bottom: 10px;">비밀번호를 변경하려면 새 비밀번호를 입력하세요. (비워두면 변경되지 않음)</p>
+                <p style="font-size: 14px; color: #ccc; text-align: left; margin-bottom: 10px;">비밀번호를 변경하려면 새 비밀번호를
+                    입력하세요. (비워두면 변경되지 않음)</p>
                 <div class="form-group">
                     <label for="edit-new-password">새 비밀번호</label>
                     <input type="password" id="edit-new-password" placeholder="새 비밀번호">
@@ -326,9 +376,11 @@
                 </div>
                 <hr style="border-color: #444; margin: 20px 0;">
                 <p style="font-size: 14px; color: #ccc; text-align: left;">변경 사항을 저장하려면 현재 비밀번호를 입력하세요.</p>
-                <input type="password" id="edit-current-password" placeholder="현재 비밀번호" required style="width: 100%; margin-top: 10px;">
+                <input type="password" id="edit-current-password" placeholder="현재 비밀번호" required
+                    style="width: 100%; margin-top: 10px;">
                 <div id="edit-profile-error-msg" style="color: #ef4444; text-align: center; display: none;"></div>
-                <button type="button" class="btn-attack" style="padding: 15px; font-size: 18px;" onclick="handleUpdateProfile()">저장하기</button>
+                <button type="button" class="btn-attack" style="padding: 15px; font-size: 18px;"
+                    onclick="handleUpdateProfile()">저장하기</button>
             </div>
             <button class="modal-close-btn" onclick="closeEditProfileModal()">닫기</button>
         </div>
@@ -351,8 +403,26 @@
             <h2 style="color: #ef4444; font-size: 40px; text-shadow: 0 0 10px red;">GAME OVER</h2>
             <p style="font-size: 24px; margin: 20px 0;">최종 점수: <span id="final-score">0</span>층</p>
             <div style="display: flex; gap: 15px; margin-top: 30px;">
-                <button class="btn-attack" style="flex: 1; font-size: 18px; padding: 15px;" onclick="handleNewGameFromGameOver()">새 게임</button>
-                <button class="btn-inventory" style="flex: 1; font-size: 18px; padding: 15px;" onclick="handleToMainFromGameOver()">메인으로</button>
+                <button class="btn-attack" style="flex: 1; font-size: 18px; padding: 15px;"
+                    onclick="handleNewGameFromGameOver()">새 게임</button>
+                <button class="btn-inventory" style="flex: 1; font-size: 18px; padding: 15px;"
+                    onclick="handleToMainFromGameOver()">메인으로</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 홈으로 가기 확인 모달 -->
+    <div id="home-confirm-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 5000; align-items: center; justify-content: center;">
+        <div class="login-content" style="max-width: 400px; text-align: center;">
+            <div class="shop-title" style="font-size: 24px;">🏠 홈으로 이동</div>
+            <p style="margin: 20px 0; font-size: 18px;">정말로 메인 화면으로 돌아가시겠습니까?<br><span
+                    style="color: #fbbf24; font-size: 14px;">현재 진행 상황이 자동으로 저장됩니다.</span></p>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn-use" style="background-color: #6b7280; flex: 1; padding: 12px; font-size: 16px;"
+                    onclick="cancelGoHome()">취소</button>
+                <button class="btn-attack" style="flex: 1; padding: 12px; font-size: 16px;"
+                    onclick="executeGoHome()">이동하기</button>
             </div>
         </div>
     </div>
@@ -365,4 +435,5 @@
     <script src="ui.js"></script>
     <script src="script.js"></script>
 </body>
+
 </html>

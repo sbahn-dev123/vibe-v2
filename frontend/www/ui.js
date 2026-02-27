@@ -187,26 +187,68 @@ function showMainControls() {
     if (isGameOver) return;
     const controlsPanel = document.getElementById('controls-panel');
     controlsPanel.classList.remove('skill-view');
-    const saveButton = isLoggedIn() ? `<button class="btn-buff" onclick="saveGame()">💾 저장&종료</button>` : `<button class="btn-buff" onclick="goHomeAndConfirm()">💾 홈으로</button>`;
+
+    const autoBattleBtnText = isAutoBattle ? '⏸️ 자동 정지' : '▶️ 자동 켜기';
+    const autoBattleBtnClass = isAutoBattle ? 'btn-buff' : 'btn-attack';
+    const skillDisabledAttr = !isPlayerTurn ? 'disabled' : '';
+
     controlsPanel.innerHTML = `
-        <button class="btn-attack" onclick="showSkillSelection()">⚔️ 스킬</button>
+        <button class="btn-attack" ${skillDisabledAttr} onclick="showSkillSelection()">⚔️ 스킬</button>
         <button class="btn-heal" onclick="showAllPotions()">🧪 물약</button>
-        ${saveButton}
+        <button class="${autoBattleBtnClass}" onclick="toggleAutoBattle()">${autoBattleBtnText}</button>
+        <button class="btn-inventory" onclick="openShop(false)">⛺ 상점</button>
         <button class="btn-armor" onclick="openInventoryModal('equipment')">🛡️ 장비</button>
         <button class="btn-inventory" onclick="openInventoryModal('loot')">💎 전리품</button>
         <button class="btn-buff" onclick="openInventoryModal('stats')">📊 스탯</button>
+        <button class="btn-use" style="background-color: #f59e0b; padding: 10px;" onclick="goHomeAndConfirm()">🏠 홈으로</button>
     `;
 }
 
 /**
- * 게임을 중단하고 홈 화면으로 돌아갈지 확인한 후 이동합니다.
- * 비로그인 상태에서 사용됩니다.
+ * 메인 컨트롤에서 홈으로 가기 버튼을 눌렀을 때 확인 모달을 엽니다.
  */
 function goHomeAndConfirm() {
-    // 진행 상황이 저장되지 않음을 알리고 확인을 받습니다.
-    if (confirm("정말로 게임을 종료하고 홈 화면으로 돌아가시겠습니까?\n현재 진행 상황은 저장되지 않습니다.")) {
-        showStartMenu();
+    playSound('click');
+    document.getElementById('home-confirm-modal').style.display = 'flex';
+}
+
+/**
+ * 홈으로 가기 모달에서 취소를 눌렀을 때 모달을 닫습니다.
+ */
+function cancelGoHome() {
+    playSound('click');
+    document.getElementById('home-confirm-modal').style.display = 'none';
+}
+
+/**
+ * 홈으로 가기 모달에서 '이동하기'를 눌렀을 때 게임을 중단하고 메인 메뉴로 돌아갑니다.
+ */
+async function executeGoHome() {
+    playSound('click');
+
+    // 모달 닫기
+    document.getElementById('home-confirm-modal').style.display = 'none';
+
+    isAutoBattle = false;
+    isGameOver = true; // 게임 루프(setTimeout) 완전 중지
+
+    try {
+        if (typeof saveGame === 'function') {
+            await saveGame(true);
+        }
+    } catch (error) {
+        console.error("홈으로 이동 중 저장 에러 (무시됨):", error);
     }
+
+    // 열려있는 모든 모달 강제 닫기
+    const modalsToClose = ['equipment-modal', 'shop-modal', 'item-select-modal', 'modal-overlay', 'stats-modal', 'loot-modal'];
+    modalsToClose.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+
+    // 홈 화면 표시
+    showStartMenu();
 }
 
 /**
@@ -278,7 +320,7 @@ function showAllPotions() {
             const itemEl = document.createElement('div'); // '사용' 버튼은 항상 첫 번째 아이템의 인덱스를 사용
             itemEl.className = 'inventory-item';
             const useIndex = itemGroup.originalIndexes[0];
-            
+
             let emoji = '';
             let description = '';
 
@@ -314,7 +356,7 @@ function showAllPotions() {
     renderPotionGroup(groupedMp, mpList);
     renderPotionGroup(groupedBuff, buffList);
     renderPotionGroup(groupedCritBuff, critBuffList);
-    
+
     // potion-container의 스타일을 원래대로 복원 (가로 정렬)
     const potionContainer = modal.querySelector('.potion-container');
     potionContainer.style.flexDirection = ''; // 'column' 속성 제거
@@ -469,6 +511,9 @@ function updateLoginStatus(username) {
  * 시작 메뉴 화면을 표시하고 메인 테마 BGM을 재생합니다.
  */
 function showStartMenu() {
+    isAutoBattle = false; // 메인 화면에서는 자동 전투 중지
+    isGameOver = true;    // 진행 중인 모든 전투 프로세스 보류/중단
+
     playBGM('main-theme'); // 시작 메뉴 BGM 재생
     document.getElementById('start-menu').style.display = 'block';
     document.getElementById('game-wrapper').style.display = 'none';
@@ -623,7 +668,7 @@ function addManualLinkToStartMenu() {
 function updateVolumeButtons() {
     const bgmBtn = document.getElementById('bgm-toggle-btn');
     const sfxBtn = document.getElementById('sfx-toggle-btn');
-    
+
 
     if (isBgmEnabled) {
         bgmBtn.classList.remove('off');
@@ -657,7 +702,7 @@ function openLoginModal() {
     const passwordInput = document.getElementById('login-password');
     if (usernameInput) usernameInput.value = '';
     if (passwordInput) passwordInput.value = '';
-    
+
     const errorMsg = document.getElementById('login-error-msg');
     if (errorMsg) errorMsg.style.display = 'none';
 
@@ -688,7 +733,7 @@ function closeLoginModal() {
 function openRegisterModal() {
     playSound('click');
     const modal = document.getElementById('register-modal');
-    
+
     // 이전 입력값과 에러 메시지 초기화
     document.getElementById('register-username').value = '';
     document.getElementById('register-password').value = '';
@@ -738,7 +783,7 @@ function switchToLoginModal(event) {
 function openFindAccountModal() {
     playSound('click');
     const modal = document.getElementById('find-account-modal');
-    
+
     // 이전 입력값과 결과 메시지 초기화
     document.getElementById('find-email').value = '';
     document.getElementById('find-birthdate').value = '';
@@ -835,7 +880,7 @@ async function handleResetPassword() {
         resultEl.innerText = '이메일과 생년월일을 모두 입력해주세요.';
         return;
     }
-    
+
     if (!confirm('비밀번호를 초기화하시겠습니까?\n초기화된 비밀번호는 화면에 표시됩니다.\n로그인 후 반드시 비밀번호를 변경해주세요.')) {
         return;
     }
@@ -1012,6 +1057,13 @@ function closeScoreboardModal() {
     playSound('click');
     const modal = document.getElementById('scoreboard-modal');
     modal.classList.remove('visible');
+
+    // 스코어보드 자동 갱신 중지
+    if (typeof scoreboardRefreshInterval !== 'undefined' && scoreboardRefreshInterval) {
+        clearInterval(scoreboardRefreshInterval);
+        scoreboardRefreshInterval = null;
+    }
+
     // transition 애니메이션이 끝난 후 display를 none으로 변경합니다.
     setTimeout(() => {
         modal.style.display = 'none';
@@ -1091,7 +1143,7 @@ function renderScoreboard(scores) {
         const flagHtml = getFlagImgHtml(topLivePlayer.country);
         const liveRecordEl = document.createElement('div');
         liveRecordEl.className = 'scoreboard-item current-run'; // 강조 스타일 재사용
-        
+
         // 만약 실시간 1위가 '나'라면, 가장 정확한 로컬 'floor' 변수 사용
         const liveFloor = (currentUsername && topLivePlayer.username === currentUsername && isMyGameActive) ? floor : topLivePlayer.liveFloor;
 
@@ -1143,7 +1195,7 @@ function renderScoreboard(scores) {
             let progressHtml = '';
             // 서버에서 받은 liveFloor 데이터 사용
             if (entry.liveFloor && entry.liveFloor > 0) {
-                 // 만약 랭커가 '나'라면, 가장 정확한 로컬 'floor' 변수 사용
+                // 만약 랭커가 '나'라면, 가장 정확한 로컬 'floor' 변수 사용
                 const liveFloor = (currentUsername && entry.username === currentUsername && isMyGameActive) ? floor : entry.liveFloor;
                 progressHtml = `<div class="score-progress" style="color: #fde047; font-size: 13px; padding-left: 38px; margin-top: 2px;">(현재 ${liveFloor}층)</div>`;
             }
@@ -1179,21 +1231,21 @@ async function checkNewContent() {
     const latestVersion = updateHistory.length > 0 ? updateHistory[0].version : null;
     const lastSeenVersion = localStorage.getItem('lastSeenNoticeVersion');
     const hasNewNotice = latestVersion && latestVersion !== lastSeenVersion;
- 
+
     const noticeBadgeGuest = document.getElementById('notice-new-badge-guest');
     const noticeBadgeLoggedIn = document.getElementById('notice-new-badge-loggedin');
     const scoreboardBadgeGuest = document.getElementById('scoreboard-new-badge-guest');
     const scoreboardBadgeLoggedIn = document.getElementById('scoreboard-new-badge-loggedin');
- 
+
     if (hasNewNotice) {
         // 공지 'N' 배지 표시
         if (noticeBadgeGuest) noticeBadgeGuest.style.display = 'flex';
         if (noticeBadgeLoggedIn) noticeBadgeLoggedIn.style.display = 'flex';
- 
+
         // 새로운 공지가 있으면 스코어보드도 확인하도록 플래그 설정
         localStorage.setItem('showScoreboardNewBadge', 'true');
     }
- 
+
     // 2. 실시간 랭킹 변동 확인
     try {
         const response = await fetch(`${window.API_URL}/scores`);
@@ -1214,7 +1266,7 @@ async function checkNewContent() {
     } catch (error) {
         console.error("실시간 랭킹 확인 중 오류:", error);
     }
- 
+
     // 3. 스코어보드 배지 최종 표시 결정
     if (localStorage.getItem('showScoreboardNewBadge') === 'true') {
         if (scoreboardBadgeGuest) scoreboardBadgeGuest.style.display = 'flex';
@@ -1347,7 +1399,7 @@ function openInventoryModal(activeTab) {
         modalContent.style.maxHeight = '85vh';
         modalContent.style.overflowY = 'auto';
     }
-    
+
     // 전리품 섹션이 없으면 동적으로 생성
     const container = modal.querySelector('.management-container');
     let lootSection = document.getElementById('loot-management-section');
@@ -1367,7 +1419,7 @@ function openInventoryModal(activeTab) {
             container.appendChild(lootSection);
         }
     }
-    
+
     // 모달 내용 렌더링 (UI에 요소가 존재하도록 보장)
     renderStatUpModal();
     renderEquipment();
@@ -1400,7 +1452,7 @@ function openInventoryModal(activeTab) {
             if (currentEquipmentSection) currentEquipmentSection.style.display = 'block';
             if (armorSection) armorSection.style.display = 'block';
             if (weaponSection) weaponSection.style.display = 'block';
-            
+
             // 단일 뷰로 표시하기 위해 그리드 해제
             managementContainer.style.display = 'block';
             break;
@@ -1447,7 +1499,7 @@ function renderLootInventory() {
         player.lootInventory.forEach((loot, index) => {
             const itemEl = document.createElement('div');
             itemEl.className = 'inventory-item';
-            
+
             let statInfoText = '특별 효과';
             if (loot.type === 'permanent_stat') {
                 statInfoText = `${statInfo[loot.stat].name} +${loot.value}`;
@@ -1463,6 +1515,7 @@ function renderLootInventory() {
                     <p style="color: #ccc; font-size: 14px;">판매 가격: ${loot.sellPrice}G</p>
                 </div>
                 <div class="item-passive-effect">보유 효과</div>
+                <button class="btn-use" style="background-color: #ef4444; margin-left: 10px;" onclick="sellLootItem(${index})">판매</button>
             `;
             listEl.appendChild(itemEl);
         });
@@ -1493,13 +1546,17 @@ function renderEquipment() {
     } else {
         player.armorInventory.forEach((armor, index) => {
             const isEquipped = player.equippedArmor && player.equippedArmor.name === armor.name;
+            const sellPrice = Math.floor((armor.cost || 100) * 0.5);
             const itemEl = document.createElement('div');
             itemEl.className = 'inventory-item';
             itemEl.innerHTML = `
                 <div class="item-info">${armor.emoji} ${armor.name} (+체력 ${armor.maxHpBonus})</div>
-                <button class="btn-use" onclick="equipItem('armor', ${index})" ${isEquipped ? 'disabled' : ''}>
-                    ${isEquipped ? '착용중' : '착용'}
-                </button>
+                <div>
+                    <button class="btn-use" onclick="equipItem('armor', ${index})" ${isEquipped ? 'disabled' : ''}>
+                        ${isEquipped ? '착용중' : '착용'}
+                    </button>
+                    <button class="btn-use" style="background-color: #ef4444; margin-left: 5px;" onclick="sellEquipmentItem('armor', ${index})" ${isEquipped ? 'disabled' : ''}>판매 (${sellPrice} G)</button>
+                </div>
             `;
             armorListEl.appendChild(itemEl);
         });
@@ -1516,13 +1573,17 @@ function renderEquipment() {
     } else {
         player.weaponInventory.forEach((weapon, index) => {
             const isEquipped = player.equippedWeapon && player.equippedWeapon.name === weapon.name;
+            const sellPrice = Math.floor((weapon.cost || 100) * 0.5);
             const itemEl = document.createElement('div');
             itemEl.className = 'inventory-item';
             itemEl.innerHTML = `
                 <div class="item-info">${weapon.emoji} ${weapon.name} (+공격력 ${weapon.atkBonus})</div>
-                <button class="btn-use" onclick="equipItem('weapon', ${index})" ${isEquipped ? 'disabled' : ''}>
-                    ${isEquipped ? '착용중' : '착용'}
-                </button>
+                <div>
+                    <button class="btn-use" onclick="equipItem('weapon', ${index})" ${isEquipped ? 'disabled' : ''}>
+                        ${isEquipped ? '착용중' : '착용'}
+                    </button>
+                    <button class="btn-use" style="background-color: #ef4444; margin-left: 5px;" onclick="sellEquipmentItem('weapon', ${index})" ${isEquipped ? 'disabled' : ''}>판매 (${sellPrice} G)</button>
+                </div>
             `;
             weaponListEl.appendChild(itemEl);
         });
@@ -1646,7 +1707,7 @@ function renderShopItems() {
         button.onclick = () => buyItem('buff', potion.cost, potion);
         buffContainer.appendChild(button);
     });
-    
+
     const critContainer = document.getElementById('crit-potion-shop-items');
     critContainer.innerHTML = '';
     critPotionList.forEach(potion => {
@@ -1680,6 +1741,8 @@ function renderShopItems() {
 
     // 전리품 판매 목록 렌더링
     renderSellableLoot();
+    // 상점 내 내 장비(착용/판매) 목록 렌더링
+    renderShopEquipment();
 }
 
 /**
@@ -1717,6 +1780,65 @@ function renderSellableLoot() {
 }
 
 /**
+ * 내 장비(무기, 방어구) 목록을 상점 UI에 렌더링하여 장착 및 판매를 지원합니다.
+ */
+function renderShopEquipment() {
+    const armorListEl = document.getElementById('shop-my-armor-list');
+    if (armorListEl) {
+        armorListEl.innerHTML = '';
+        if (player.armorInventory.length === 0) {
+            armorListEl.innerHTML = '<div class="inventory-item" style="color: #888;">보유한 방어구가 없습니다.</div>';
+        } else {
+            player.armorInventory.forEach((armor, index) => {
+                const isEquipped = player.equippedArmor && player.equippedArmor.name === armor.name;
+                const sellPrice = Math.floor((armor.cost || 100) * 0.5);
+                const itemEl = document.createElement('div');
+                itemEl.className = 'inventory-item';
+                itemEl.style.flexDirection = 'column';
+                itemEl.style.alignItems = 'flex-start';
+                itemEl.innerHTML = `
+                    <div class="item-info">${armor.emoji} ${armor.name} (+체력 ${armor.maxHpBonus})</div>
+                    <div style="margin-top: 8px;">
+                        <button class="btn-use" onclick="equipItem('armor', ${index})" ${isEquipped ? 'disabled' : ''}>
+                            ${isEquipped ? '착용중' : '착용'}
+                        </button>
+                        <button class="btn-use" style="background-color: #ef4444; margin-left: 5px;" onclick="sellEquipmentItem('armor', ${index})" ${isEquipped ? 'disabled' : ''}>판매 (${sellPrice} G)</button>
+                    </div>
+                `;
+                armorListEl.appendChild(itemEl);
+            });
+        }
+    }
+
+    const weaponListEl = document.getElementById('shop-my-weapon-list');
+    if (weaponListEl) {
+        weaponListEl.innerHTML = '';
+        if (player.weaponInventory.length === 0) {
+            weaponListEl.innerHTML = '<div class="inventory-item" style="color: #888;">보유한 무기가 없습니다.</div>';
+        } else {
+            player.weaponInventory.forEach((weapon, index) => {
+                const isEquipped = player.equippedWeapon && player.equippedWeapon.name === weapon.name;
+                const sellPrice = Math.floor((weapon.cost || 100) * 0.5);
+                const itemEl = document.createElement('div');
+                itemEl.className = 'inventory-item';
+                itemEl.style.flexDirection = 'column';
+                itemEl.style.alignItems = 'flex-start';
+                itemEl.innerHTML = `
+                    <div class="item-info">${weapon.emoji} ${weapon.name} (+공격력 ${weapon.atkBonus})</div>
+                    <div style="margin-top: 8px;">
+                        <button class="btn-use" onclick="equipItem('weapon', ${index})" ${isEquipped ? 'disabled' : ''}>
+                            ${isEquipped ? '착용중' : '착용'}
+                        </button>
+                        <button class="btn-use" style="background-color: #ef4444; margin-left: 5px;" onclick="sellEquipmentItem('weapon', ${index})" ${isEquipped ? 'disabled' : ''}>판매 (${sellPrice} G)</button>
+                    </div>
+                `;
+                weaponListEl.appendChild(itemEl);
+            });
+        }
+    }
+}
+
+/**
  * (사용되지 않음) 인벤토리 모달을 여는 함수.
  */
 function openInventory() {
@@ -1749,7 +1871,7 @@ function renderInventory() {
         const itemGroup = groupedInventory[name];
         const itemEl = document.createElement('div');
         itemEl.className = 'inventory-item';
-        
+
         let emoji = '';
         if (itemGroup.type === 'heal') emoji = '💊';
         else if (itemGroup.type === 'buff') emoji = '🧪';
