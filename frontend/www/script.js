@@ -1200,7 +1200,8 @@ function generateMonstersForFloor(floorNumber) {
         }
 
         // --- 메인 몬스터 생성 ---
-        const mainMonsterTemplate = monsterList[Math.min(floorNumber - 1, monsterList.length - 1)];
+        const mainMonsterIndex = floorNumber - 1;
+        const mainMonsterTemplate = monsterList[isInfiniteMode ? mainMonsterIndex % monsterList.length : Math.min(mainMonsterIndex, monsterList.length - 1)];
         const mainMonster = createMonster(mainMonsterTemplate, difficultyMultiplier);
         generatedMonsters.push(mainMonster); // 메인 몬스터를 마지막에 추가
 
