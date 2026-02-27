@@ -66,6 +66,16 @@ const midBossList = [
     { name: "별의 포식자", emoji: "🌠", hp: 8280, atk: 297, xp: 46000, dropCoins: 28000, specialDrop: { type: 'permanent_stat', stat: 'fcs', value: 18, name: '삼켜진 별의 조각', sellPrice: 48000 } },
     // 190층 보스
     { name: "차원의 방랑자", emoji: "💠", hp: 10580, atk: 385, xp: 68000, dropCoins: 46000, specialDrop: { type: 'permanent_stat', stat: 'luk', value: 18, name: '뒤틀린 차원의 균열', sellPrice: 72000 } },
+    // 210층 보스
+    { name: "시간의 왜곡자", emoji: "⏳", hp: 13500, atk: 480, xp: 85000, dropCoins: 58000, specialDrop: { type: 'debuff_resistance', value: 0.40, name: '시간의 흐름 제어', sellPrice: 90000 } },
+    // 230층 보스
+    { name: "공허의 감시자", emoji: "🌌", hp: 17000, atk: 580, xp: 110000, dropCoins: 75000, specialDrop: { type: 'hp_regen_per_turn', value: 25, name: '공허의 생명력', sellPrice: 120000 } },
+    // 250층 보스
+    { name: "차원의 틈새", emoji: "🕳️", hp: 21000, atk: 700, xp: 140000, dropCoins: 95000, specialDrop: { type: 'bonus_stat_points', value: 2, name: '차원의 조각', sellPrice: 150000 } },
+    // 270층 보스
+    { name: "우주의 심장", emoji: "💖", hp: 26000, atk: 850, xp: 175000, dropCoins: 120000, specialDrop: { type: 'crit_damage_bonus', value: 0.40, name: '우주의 맥동', sellPrice: 180000 } },
+    // 290층 보스
+    { name: "태초의 존재", emoji: "🥚", hp: 32000, atk: 1000, xp: 220000, dropCoins: 150000, specialDrop: { type: 'permanent_stat', stat: 'fcs', value: 30, name: '태초의 근원', sellPrice: 250000 } },
 ];
 
 //* 메인 보스 몬스터 도감: 20층, 40층, 60층 등 20층마다 등장하는 강력한 몬스터입니다.
@@ -90,6 +100,16 @@ const bossList = [
     { name: "혼돈의 화신", emoji: "🌀", hp: 12075, atk: 341, xp: 54000, dropCoins: 34000, skill: { type: 'mp_drain', chance: 0.75, power: 250, name: '혼돈의 소용돌이' }, specialDrop: { type: 'debuff_resistance', value: 0.30, name: '혼돈의 방패', sellPrice: 65000 } },
     // 200층 보스
     { name: "종언의 창조주", emoji: "🌌", hp: 17250, atk: 440, xp: 85000, dropCoins: 60000, skill: { type: 'charge_attack', chance: 0.8, power: 5, name: '초신성' }, specialDrop: { type: 'permanent_stat', stat: 'fcs', value: 50, name: '창조주의 절대 권능', sellPrice: 100000 } },
+    // 220층 보스
+    { name: "무한의 군주", emoji: "♾️", hp: 22000, atk: 550, xp: 110000, dropCoins: 80000, skill: { type: 'charge_attack', chance: 0.82, power: 5.5, name: '무한의 파동' }, specialDrop: { type: 'permanent_stat', stat: 'str', value: 25, name: '무한의 힘', sellPrice: 150000 } },
+    // 240층 보스
+    { name: "절대자의 그림자", emoji: "👤", hp: 28000, atk: 680, xp: 150000, dropCoins: 110000, skill: { type: 'mp_drain', chance: 0.8, power: 350, name: '그림자 흡수' }, specialDrop: { type: 'permanent_stat', stat: 'mag', value: 25, name: '절대자의 지식', sellPrice: 180000 } },
+    // 260층 보스
+    { name: "창조의 파편", emoji: "💎", hp: 35000, atk: 800, xp: 200000, dropCoins: 140000, skill: { type: 'stun', chance: 0.85, name: '파편 폭발' }, specialDrop: { type: 'permanent_stat', stat: 'vit', value: 30, name: '창조의 핵', sellPrice: 220000 } },
+    // 280층 보스
+    { name: "운명의 직조자", emoji: "🕸️", hp: 45000, atk: 950, xp: 260000, dropCoins: 180000, skill: { type: 'drain', chance: 0.7, name: '운명의 실타래' }, specialDrop: { type: 'mp_cost_reduction', value: 0.25, name: '운명의 실', sellPrice: 280000 } },
+    // 300층 보스
+    { name: "만물의 근원", emoji: "🌟", hp: 60000, atk: 1100, xp: 350000, dropCoins: 250000, skill: { type: 'charge_attack', chance: 0.9, power: 6.5, name: '근원의 폭발' }, specialDrop: { type: 'bonus_stat_points', value: 5, name: '만물의 정수', sellPrice: 400000 } },
 ];
 
 //* 상점에서 판매하는 방어구 목록: 티어가 높아질수록 성능과 가격이 증가합니다.
