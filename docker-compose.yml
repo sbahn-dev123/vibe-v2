@@ -36,3 +36,5 @@ services:
 
 volumes:
   mongo-data:
+    external: true
+    name: juns_game_mongo-data
