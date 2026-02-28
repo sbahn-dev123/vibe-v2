@@ -1084,6 +1084,19 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         gap: 8px; /* 캐릭터 간 간격 축소 */
         padding: 5px; /* 전투 필드 여백 축소 */
     }
+    .controls {
+        grid-template-columns: repeat(4, 1fr); /* 2열 -> 4열로 변경하여 버튼을 더 작고 넓게 배치 */
+        gap: 5px; /* 버튼 간격 축소 */
+    }
+
+    #monster-area {
+        width: 100%; /* 부모 요소의 전체 너비를 차지하도록 설정 */
+        overflow-x: auto; /* 내용이 넘칠 경우 가로 스크롤바 생성 */
+        justify-content: flex-start; /* 몬스터가 적을 때 왼쪽에 정렬되도록 */
+        padding: 5px 10px; /* 스크롤 영역에 약간의 여백 추가 */
+        gap: 15px; /* 모바일에서 몬스터 간 간격 살짝 줄임 */
+    }
+
     .emoji { font-size: 52px; } /* 캐릭터 이모지 크기 추가 축소 (기존 65px에서 약 20% 감소) */
     .name { font-size: 14px; margin-top: 4px; } /* 이름 폰트 축소 */
     .hp-bar-bg { width: 80px; height: 15px; margin-top: 4px; } /* 체력바 크기 축소 */
@@ -1107,9 +1120,11 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     .xp-bar-bg { height: 18px; }
     .xp-text, .level-badge { font-size: 13px; } /* 레벨/XP 텍스트 축소 */
     
-    button {
-        padding: 12px 8px; /* 컨트롤 버튼 여백 추가 축소 */
-        font-size: 18px;
+    /* 컨트롤 버튼들이 화면에 잘리지 않도록 크기 조정 */
+    .controls button {
+        padding: 12px 5px; /* 좌우 패딩 축소 */
+        font-size: 15px; /* 폰트 크기 축소 */
+        line-height: 1.2; /* 줄바꿈 시 줄 간격 조정 */
     }
 
     .floating-text { font-size: 24px; }
@@ -1139,6 +1154,12 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     #equipment-modal .item-passive-effect {
         font-size: 14px; /* 18px -> 14px */
         padding: 6px 10px;
+    }
+    /* 장비 모달 내 착용/판매 버튼 크기 조정 */
+    #equipment-modal .btn-use {
+        padding: 8px 12px; /* 패딩 축소 */
+        font-size: 13px; /* 폰트 크기 축소 */
+        line-height: 1.1;
     }
     #stat-points-display { font-size: 16px; } /* 20px -> 16px */
     #stat-points-display span { font-size: 20px; } /* 24px -> 20px */
