@@ -130,6 +130,11 @@ const armorList = [
     { name: '초월의 갑옷', emoji: '✨', maxHpBonus: 2050, cost: 650000 },
     { name: '신화의 갑옷', emoji: '🦄', maxHpBonus: 2600, cost: 970000 },
     { name: '아스가르드의 갑옷', emoji: '🌌', maxHpBonus: 3250, cost: 1420000 },
+    { name: '올림푸스의 갑옷', emoji: '🏛️', maxHpBonus: 4000, cost: 2000000 },
+    { name: '타이탄의 갑옷', emoji: '🦾', maxHpBonus: 4850, cost: 2800000 },
+    { name: '공허의 갑옷', emoji: '⚫', maxHpBonus: 5800, cost: 3900000 },
+    { name: '차원의 갑옷', emoji: '💠', maxHpBonus: 6850, cost: 5400000 },
+    { name: "절대 무의 갑옷", emoji: '🌀', maxHpBonus: 8000, cost: 7400000 },
 ];
 
 //* 상점에서 판매하는 HP 회복 물약 목록
@@ -192,6 +197,11 @@ const weaponList = [
     { name: '초월의 검', emoji: '✨', atkBonus: 500, cost: 780000 },
     { name: '신화의 검', emoji: '🦄', atkBonus: 620, cost: 1180000 },
     { name: '궁니르', emoji: '⚡', atkBonus: 770, cost: 1730000 },
+    { name: '묠니르', emoji: '🔨', atkBonus: 950, cost: 2400000 },
+    { name: '아레스의 전쟁창', emoji: '🔥', atkBonus: 1160, cost: 3300000 },
+    { name: '태양의 신검', emoji: '☀️', atkBonus: 1400, cost: 4500000 },
+    { name: '은하 분쇄기', emoji: '🌠', atkBonus: 1670, cost: 6100000 },
+    { name: '차원 절단기', emoji: '💠', atkBonus: 1970, cost: 8200000 },
 ];
 
 //* 상점에서 판매하는 치명타 확률 증가(버프) 물약 목록
