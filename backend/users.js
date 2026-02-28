@@ -7,7 +7,7 @@ const auth = require('./auth');
 const admin = require('./admin'); // 관리자 미들웨어 추가
 // User Model
 const User = require('./User');
-
+const Score = require('./Score'); // Score 모델을 가져옵니다.
 
 // @route   POST api/users/register
 // @desc    Register new user
@@ -248,6 +248,35 @@ router.delete('/admin/:id', admin, async (req, res) => {
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
+    }
+});
+
+// @route   POST /api/users/admin/reset-score/:id
+// @desc    관리자가 사용자의 스코어를 초기화
+// @access  Private/Admin
+router.post('/admin/reset-score/:id', [auth, admin], async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+
+        // 사용자와 연결된 스코어 문서를 찾습니다.
+        const scoreRecord = await Score.findOne({ user: req.params.id });
+
+        if (scoreRecord) {
+            // 스코어가 존재하면 0으로 리셋하고 저장합니다.
+            scoreRecord.score = 0;
+            scoreRecord.liveFloor = 0; // 실시간 층수도 초기화
+            await scoreRecord.save();
+        }
+        // 스코어 기록이 없으면 아무것도 할 필요가 없습니다.
+
+        res.json({ message: `'${user.username}' 사용자의 스코어가 성공적으로 초기화되었습니다.` });
+
+    } catch (error) {
+        console.error('Score reset error:', error.message);
+        res.status(500).send('서버 오류가 발생했습니다.');
     }
 });
 

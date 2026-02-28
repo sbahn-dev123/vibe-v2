@@ -122,6 +122,28 @@ async function handleUpdateUser(event) {
     }
 }
 
+async function handleResetScore(userId) {
+    const user = allUsers.find(u => u._id === userId);
+    if (!confirm(`정말로 '${user.username}' 사용자의 스코어를 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/users/admin/reset-score/${userId}`, {
+            method: 'POST',
+            headers: getAuthHeaders()
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || '스코어 초기화에 실패했습니다.');
+        }
+        alert(`'${user.username}' 사용자의 스코어가 초기화되었습니다.`);
+        // The list doesn't show scores, so no need to refresh.
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
 async function handleDeleteUser(userId) {
     const user = allUsers.find(u => u._id === userId);
     if (!confirm(`정말로 '${user.username}' 사용자를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)) {
@@ -164,6 +186,7 @@ function renderUserList(usersToRender) {
             <td>
                 <button class="btn btn-edit" onclick="openEditModal('${user._id}')">수정</button>
                 <button class="btn btn-delete" onclick="handleDeleteUser('${user._id}')">삭제</button>
+                <button class="btn btn-reset" style="background-color: #f59e0b;" onclick="handleResetScore('${user._id}')">스코어 초기화</button>
             </td>
         `;
         userListBody.appendChild(row);
