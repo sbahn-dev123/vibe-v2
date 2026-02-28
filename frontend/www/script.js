@@ -1290,8 +1290,9 @@ async function gameOver() {
     }
 
     // 게임 오버 모달을 표시하지 않고 3초 후 자동 환생 (무한 방치)
+    const restartFloor = Math.max(1, Math.floor((floor - 1) / 10) * 10 + 1 ); // 10층 단위로 환생 층 결정 (예: 23층 -> 21층, 37층 -> 31층)
     let countdown = 3;
-    log(`🔄 ${countdown}초 후 1층에서 자동으로 환생합니다...`, 'log-system');
+    log(`🔄 ${countdown}초 후 ${restartFloor}층에서 자동으로 환생합니다...`, 'log-system');
 
     const logBox = document.getElementById('log-box');
     const msgElement = logBox.lastElementChild;
@@ -1299,10 +1300,12 @@ async function gameOver() {
     const interval = setInterval(() => {
         countdown--;
         if (countdown > 0) {
-            msgElement.innerText = `🔄 ${countdown}초 후 1층에서 자동으로 환생합니다...`;
+            if (msgElement) { // 요소가 존재하는지 확인
+                msgElement.innerText = `🔄 ${countdown}초 후 ${restartFloor}층에서 자동으로 환생합니다...`;
+            }
         } else {
             clearInterval(interval);
-            startNewGame(true); // 환생 모드로 새 게임 시작
+            startNewGame(true, restartFloor); // 환생 모드로 새 게임 시작
         }
     }, 1000);
 }
@@ -1690,8 +1693,9 @@ function startGame(loadedState = null) {
  * 새로운 게임을 시작하는 함수 (방치형 환생 대응).
  * - 모든 게임 상태를 초기값으로 리셋합니다 (환생 시 템/골드 유지).
  * @param {boolean} [isReincarnation=false] - 환생 여부
+ * @param {number} [restartFloor=1] - 게임을 시작할 층. 환생 시 사용됩니다.
  */
-function startNewGame(isReincarnation = false) {
+function startNewGame(isReincarnation = false, restartFloor = 1) {
     if (!isReincarnation) { // 홈 화면에서 '새 게임 시작'을 누른 경우
         let confirmMessage = "정말로 새로운 게임을 시작하시겠습니까?\n이전 아이템, 스탯, 물약 등 모든 진행 상황이 초기화됩니다.";
         if (isLoggedIn()) {
@@ -1744,10 +1748,10 @@ function startNewGame(isReincarnation = false) {
     // 저장했던 재화/아이템 복구
     if (savedData) {
         Object.assign(player, savedData);
-        log("🔄 환생했습니다! 1층부터 다시 시작하지만 아이템과 스탯은 유지됩니다.", 'log-system', { color: '#fbbf24' });
+        log(`🔄 환생했습니다! ${restartFloor}층부터 다시 시작하지만 아이템과 스탯은 유지됩니다.`, 'log-system', { color: '#fbbf24' });
     }
 
-    floor = 1;
+    floor = restartFloor;
     turn = 1;
     isPlayerTurn = true;
     isGameOver = false;
@@ -1950,9 +1954,11 @@ async function loadGame() {
 
         // Check for invalid game state (e.g., saved on game over)
         if (loadedState && loadedState.player && loadedState.player.hp <= 0) {
-            alert("캐릭터가 지난번 전투에서 패배했습니다. 아이템과 스탯을 유지한 채 1층에서 환생합니다!");
+            const restartFloor = Math.max(1, Math.floor((loadedState.floor - 1) / 10) * 10 + 1); // 환생 층 계산 (예: 23층 -> 21층, 30층 -> 31층)
+            alert(`캐릭터가 지난번 전투에서 패배했습니다. 아이템과 스탯을 유지한 채 ${restartFloor}층에서 환생합니다!`);
             Object.assign(player, loadedState.player);
-            startNewGame(true);
+            // 환생 모드로, 계산된 층에서 시작
+            startNewGame(true, restartFloor);
             return;
         }
 

@@ -1337,7 +1337,9 @@ function closeGameOverModal() {
  */
 function handleNewGameFromGameOver() {
     closeGameOverModal();
-    startNewGame(true); // script.js에 정의된 함수
+    const finalScore = parseInt(document.getElementById('final-score').innerText, 10);
+    const restartFloor = Math.max(1, Math.floor((finalScore - 1) / 10) * 10 + 1); // 예: 23층 -> 21층, 30층 -> 31층
+    startNewGame(true, restartFloor); // script.js에 정의된 함수
 }
 
 /**
